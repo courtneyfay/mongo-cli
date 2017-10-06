@@ -1,5 +1,6 @@
 var mongo = require("mongodb").MongoClient;
 var prompt = require("prompt-sync")();
+var opn = require("opn");
 var url = "mongodb://localhost:27017/restaurant_db";
 
 mongo.connect(url, function(err, db){
@@ -52,17 +53,76 @@ mongo.connect(url, function(err, db){
   if (updateEntry === "edit") {
   	var oneName = prompt("Type the name of the specific restaurant you're looking for: ");
   	var nameLookup = { "name" : oneName };
-  	if (oneChoice != "" ) {
-	  	collection.find(nameSearch).toArray(function(err, doc){
-	  		console.log(doc);
-	  	});
+  	if (oneName != "") {
+
+      collection.find(nameLookup).toArray(function(err, doc){
+        if (err) console.log(err);
+        else {
+
+          // reports back the record of the restaurant
+          console.log("Found the restaurant: " + oneName);
+
+          // asks the user which part of the restaurant record they'd like to update
+          let editPrompt = prompt("What would you like to update? Type 'name' or 'address' or 'yelp': ");  
+          if (editPrompt === "name") {
+            let namePrompt = prompt("Type the new restaurant name and press enter: ");
+            collection.update(nameLookup, { $set: { name: namePrompt }});
+            collection.find().toArray(function(err, doc){
+              if (err) {
+                  console.log(err);
+                } else {
+                console.log(doc);
+              }
+            });
+          } else if (editPrompt === "address") {
+              let addressPrompt = prompt("Type the new restaurant address and press enter: ");
+              collection.update(nameLookup, { $set: { address: addressPrompt }});
+              collection.find().toArray(function(err, doc){
+              if (err) {
+                  console.log(err);
+                } else {
+                console.log(doc);
+              }
+            });
+          } else if (editPrompt === "yelp") {
+              let yelpPrompt = prompt("Type the new restaurant Yelp URL and press enter: ");
+              collection.update(nameLookup, { $set: { yelp: yelpPrompt }});
+              collection.find().toArray(function(err, doc){
+              if (err) {
+                  console.log(err);
+                } else {
+                console.log(doc);
+              }
+            });
+          }
+        }
+      });      
 	  } else {
 			console.log("Okay, no problem.");
-	  }
+	  }  
   } else {
   	console.log('Okay, no problem.');
   };
   
-  // DELETE - lets users delete specific restaurants (or the entire database?)
-  
+  // DELETE - lets users delete specific restaurants 
+  var deleteOne = prompt("Type 'delete' if you'd like to remove a restaurant from the list: ");
+  if (deleteOne === "delete" ) {
+    var theName = prompt("Type the name of the specific restaurant you're looking for: ");
+    var getRestaurantByName = { "name" : theName };
+    if (theName != "" ) {
+      collection.find(getRestaurantByName).toArray(function(err, doc){
+        collection.remove(doc[0]);
+        console.log("That restaurant has been removed successfully.");
+      });
+    } else {
+      console.log("Okay, no problem.");
+    };
+  }
+
+  // DELETE - lets users delete specific restaurants 
+  var deleteAll = prompt("Type 'dynamite' if you'd like to remove ALL the restaurants: ");
+  if (deleteAll === "dynamite" ) {
+    db.dropDatabase();
+    opn('https://i.makeagif.com/media/12-01-2015/gscz6z.gif');
+  }
 });
